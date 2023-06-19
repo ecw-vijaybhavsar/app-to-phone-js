@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="./node_modules/nexmo-client/dist/nexmoClient.js"></script>
+  <style>
+    input, button { font-size: 1rem; }
+    #hangup { display:none; }
+  </style>
+</head>
+<body>
+  <h1>Call Phone from App</h1>
+  <label for="phone-number">Your Phone Number:</label>
+  <input type="text" name="phone-number" value="" 
+    placeholder="i.e. 14155550100" id="phone-number" size="30">
+  <button type="button" id="call">Call</button>
+  <button type="button" id="hangup">Hang Up</button>
+  <div id="status"></div>
+  <script>
+
+    const USER_JWT = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODY5MDc4NTUsImV4cCI6MTY4NjkyOTQ1NSwianRpIjoiWUhzdGtXdDFrQlZ5IiwiYXBwbGljYXRpb25faWQiOiJlNTFkZTBiYy01NmFiLTRiZDktYTY4NS0xZTAzMzAxMzY2YTAiLCJzdWIiOiJBbGljZSIsImFjbCI6eyJwYXRocyI6eyIvKi91c2Vycy8qKiI6e30sIi8qL2NvbnZlcnNhdGlvbnMvKioiOnt9LCIvKi9zZXNzaW9ucy8qKiI6e30sIi8qL2RldmljZXMvKioiOnt9LCIvKi9pbWFnZS8qKiI6e30sIi8qL21lZGlhLyoqIjp7fSwiLyovYXBwbGljYXRpb25zLyoqIjp7fSwiLyovcHVzaC8qKiI6e30sIi8qL2tub2NraW5nLyoqIjp7fSwiLyovbGVncy8qKiI6e319fX0.liMGQeouzaRkKpVTEyGenkag2jf32Wri_F-I9O68ppJHUjtHa83nShqPjwYye09-XAy_4CPz7WFLuglh4hywT3SXOWbSK__os9qDkP9jENaWLiIuurPhvYuWgLdg1Rxd4wVJBCgPKvPsPAlmznaMSzvpRl_d7F3ONAv6-XOvlM3cZ5lAXp_FjMS9-J9EO0dyDb8nQHq5m93mLsuxPpgHR9wtUmkVjJafmzjJnupXeXj5DZBUvUiwL92ZcY5jKnH4_nuFOC-oEKnyWYqqIZxduPBbCtncVF6dTisT2L0Y2gwOntZ5JM4J8vGCesQ_GxfRKtIJYmdtUrwTrufRWIkJJQ";
+
+    const callButton = document.getElementById("call");
+    const hangupButton = document.getElementById("hangup");
+    const statusElement = document.getElementById("status");
+    new NexmoClient({ debug: true })
+      .createSession(USER_JWT)
+      .then(app => {
+        callButton.addEventListener("click", event => {
+          event.preventDefault();
+          let destination = document.getElementById("phone-number").value;
+          if (destination !== ""){
+            app.callServer(destination);
+          } else {
+            statusElement.innerText = 'Please enter your phone number.';
+          }
+        });
+        app.on("member:call", (member, call) => {
+          hangupButton.addEventListener("click", () => {
+            call.hangUp();
+          });
+        });
+        app.on("call:status:changed",(call) => {
+          statusElement.innerText = `Call status: ${call.status}`;
+          if (call.status === call.CALL_STATUS.STARTED){
+            callButton.style.display = "none";
+            hangupButton.style.display = "inline";
+          }
+          if (call.status === call.CALL_STATUS.COMPLETED){
+            callButton.style.display = "inline";
+            hangupButton.style.display = "none";
+          }
+        });
+      })
+      .catch(console.error);
+    </script>
+</body>
+</html>
